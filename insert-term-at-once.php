@@ -2,7 +2,7 @@
 
 /*
 Plugin Name: Insert Term at Once
-Description: insert term at once on CSV file
+Description: Insert term at once on CSV file
 Version: 1.0
 Author: Susumu Seino
 Author URI: https://susu.mu
@@ -46,19 +46,55 @@ add_action( 'wp_enqueue_scripts', 'add_swiper_sets' );
 /* 基本機能
 /*
 /*********************************/
-function insert_term_at_once() {
+
+function insert_term_at_once( $terms ) {
 //	$parent_term = term_exists( 'bar', 'category' ); // array is returned if taxonomy is given
 //	$parent_term_id = $parent_term['term_id'];         // get numeric term id
-	wp_insert_term( 'Apple',   // the term
-		'categoory', // the taxonomy
-		array(
-			'description' => 'A yummy apple.',
-			'slug'        => 'apple',
-			//'parent'      => $parent_term_id,
-		) );
+
+//	$terms = [
+//		[ 'ばなな', 'banana' ],
+//		[ 'オレンジ', 'orange' ]
+//	];
+
+	foreach ( $terms as $term ) {
+		wp_insert_term( $term[0],   // the term
+			'category', // the taxonomy
+			array(
+				'slug'        => $term[1],
+				'description' => $term[2],
+				//'parent'      => $parent_term_id,
+			) );
+	}
 }
 
-add_action( 'init', 'insert_term_at_once' );
+if ( ! empty( $_FILES['csv'] ) ) {
+	if ( is_uploaded_file( $_FILES["csv"]["tmp_name"] ) ) {
+		if ( move_uploaded_file( $_FILES["csv"]["tmp_name"], $_FILES["csv"]["name"] ) ) {
+			chmod( $_FILES["csv"]["name"], 0644 );
+
+			setlocale( LC_ALL, 'ja_JP.UTF-8' );    //ロケール情報の設定
+			$data = file_get_contents( $_FILES["csv"]["name"] );
+//			$data = mb_convert_encoding( $data, 'UTF-8', 'sjis-win' );    //文字エンコードをUTF-8へ変換
+			$temp = tmpfile();    //テンポラリファイルの作成
+			$meta = stream_get_meta_data( $temp );    //メタデータからファイルパスを取得して読み込み
+			fwrite( $temp, $data );    //バイナリセーフなファイル書き込み処理
+			rewind( $temp );    //ファイルポインタの位置を先頭に戻す
+			$file = new SplFileObject( $meta['uri'] );    //fgetcsvよりSplFileObjectを使うほうが高速らしい。
+			$file->setFlags( SplFileObject::READ_CSV );
+			$csv = array();
+			foreach ( $file as $line ) {
+				$terms[] = $line;
+			}
+			fclose( $temp );
+			$file = null;
+
+
+		} else {
+			echo "ファイルをアップロードできません。";
+		}
+	}
+	insert_term_at_once( $terms );
+}
 
 
 /*********************************/
@@ -78,7 +114,7 @@ function itao_init() {
 	add_option( 'itao_options', $itao_options );
 }
 
-add_action( 'activate_pv-count-swiper/pv-count-swiper.php', 'itao_init' );
+add_action( 'activate_insert-term-at-once/insert-term-at-once.php', 'itao_init' );
 
 function itao_get_options() {
 	return get_option( 'itao_options' );
@@ -90,9 +126,8 @@ function itao_config() {
 
 function itao_config_page() {
 	if ( function_exists( 'add_submenu_page' ) ) {
-		add_options_page( __( 'WordPress Plugin Base' ), __( 'WordPress Plugin Base' ), 'manage_options', 'pv-count-swiper', 'itao_config' );
+		add_options_page( __( 'Insert Term at Once' ), __( 'Insert Term at Once' ), 'manage_options', 'insert-term-at-once', 'itao_config' );
 	}
 }
 
 add_action( 'admin_menu', 'itao_config_page' );
-
