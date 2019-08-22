@@ -40,25 +40,26 @@ add_action( 'wp_enqueue_scripts', "itao_add_stylesheet", 9999 );
 /*********************************/
 
 function insert_term_at_once( $terms, $taxonomies ) {
-	//	$parent_term = term_exists( 'bar', 'category' ); // array is returned if taxonomy is given
-	//	$parent_term_id = $parent_term['term_id'];         // get numeric term id
 
 	foreach ( $taxonomies as $tax ) {
 		foreach ( $terms as $term ) {
 			$term_array = array();
 			if ( ! $term[0] == null ) {
+				if ( ! $term[3] == null ) {
+					$parent_term    = term_exists( $term[3], $tax ); // array is returned if taxonomy is given
+					$parent_term_id = $parent_term['term_id'];         // get numeric term id
+				}
 				$term_array = array(
 					'slug'        => $term[1],
 					'description' => $term[2],
-					//'parent'      => $parent_term_id,
+					'parent'      => $parent_term_id,
 				);
 			}
-
-
-			wp_insert_term( $term[0], $tax, $term_array );
+			if ( ! $term[3] && ! $parent_term_id == null ) {
+				wp_insert_term( $term[0], $tax, $term_array );
+			}
 		}
 	}
-
 }
 
 
