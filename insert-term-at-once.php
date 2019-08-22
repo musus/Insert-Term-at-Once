@@ -33,14 +33,6 @@ function itao_add_stylesheet() {
 add_action( 'wp_enqueue_scripts', "itao_add_stylesheet", 9999 );
 
 
-function add_swiper_sets() {
-	$swiper_css_path = plugins_url( 'css/swiper' . '.css', __FILE__ );
-	wp_enqueue_style( 'swiper-css', $swiper_css_path );
-	wp_enqueue_script( 'itao', plugins_url( '/js/swiper.min.js', __FILE__ ), array( 'jquery' ) );
-}
-
-add_action( 'wp_enqueue_scripts', 'add_swiper_sets' );
-
 /*********************************/
 /*
 /* 基本機能
@@ -51,19 +43,20 @@ function insert_term_at_once( $terms ) {
 //	$parent_term = term_exists( 'bar', 'category' ); // array is returned if taxonomy is given
 //	$parent_term_id = $parent_term['term_id'];         // get numeric term id
 
-//	$terms = [
-//		[ 'ばなな', 'banana' ],
-//		[ 'オレンジ', 'orange' ]
-//	];
 
 	foreach ( $terms as $term ) {
-		wp_insert_term( $term[0],   // the term
-			'category', // the taxonomy
-			array(
-				'slug'        => $term[1],
-				'description' => $term[2],
-				//'parent'      => $parent_term_id,
-			) );
+		$term_array = array();
+		if ( ! $term[0] == null ) {
+			if ( ! $term[1] == null ) {
+				array_splice( $term_array, 1, 0, $term[1] );
+			}
+			if ( $term[2] ) {
+				array_splice( $term_array, 2, 0, $term[2] );
+			}
+		}
+
+
+		wp_insert_term( $term[0], 'category', $term_array );
 	}
 }
 
@@ -74,14 +67,13 @@ if ( ! empty( $_FILES['csv'] ) ) {
 
 			setlocale( LC_ALL, 'ja_JP.UTF-8' );    //ロケール情報の設定
 			$data = file_get_contents( $_FILES["csv"]["name"] );
-//			$data = mb_convert_encoding( $data, 'UTF-8', 'sjis-win' );    //文字エンコードをUTF-8へ変換
 			$temp = tmpfile();    //テンポラリファイルの作成
 			$meta = stream_get_meta_data( $temp );    //メタデータからファイルパスを取得して読み込み
 			fwrite( $temp, $data );    //バイナリセーフなファイル書き込み処理
 			rewind( $temp );    //ファイルポインタの位置を先頭に戻す
 			$file = new SplFileObject( $meta['uri'] );    //fgetcsvよりSplFileObjectを使うほうが高速らしい。
 			$file->setFlags( SplFileObject::READ_CSV );
-			$csv = array();
+			$terms = array();
 			foreach ( $file as $line ) {
 				$terms[] = $line;
 			}
@@ -93,6 +85,7 @@ if ( ! empty( $_FILES['csv'] ) ) {
 			echo "ファイルをアップロードできません。";
 		}
 	}
+	var_dump( $terms );
 	insert_term_at_once( $terms );
 }
 

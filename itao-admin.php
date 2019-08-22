@@ -51,53 +51,33 @@ $message = "";
 					</div>
 					<h3 class="hndle"><span><?php _e( "Options", "insert-term-at-once" ); ?></span></h3>
 					<div class="inside" style="display: block;">
+						<?php
+						$args       = array(
+							'public' => true
+						);
+						$taxonomies = get_taxonomies( $args, 'objects' );
+						?>
 
 						<table class="form-table">
 							<tr>
-								<th><?php _e( "WP Plugin Admin Checkbox", "insert-term-at-once" ) ?></th>
-								<td><input type="checkbox" name="itao_check" value="1" <?php if ( stripslashes( $itao_options['itao_check'] ) == "1" ) {
-										echo "checked='checked'";
-									} ?> /></td>
-							</tr>
+								<th><?php _e( "Select taxonomy", "insert-term-at-once" ) ?></th>
+								<td>
+									<ul>
+										<li>
+											<input type="checkbox" name="itao_check" value="all_taxonomies"> <?php _e( "All taxonomies at once", "insert-term-at-once" ) ?>
+										</li>
+										<?php
+										foreach ( $taxonomies as $taxonomy_obj ) {
 
-							<tr>
-								<th><?php _e( "WP Plugin Admin Dropdown", "insert-term-at-once" ) ?></th>
-								<td>
-									<select name="itao_dropdown">
-										<option value="wordpress" <?php if ( $itao_options['itao_dropdown'] == 'WordPress' )
-											echo "selected='selected'" ?>>WordPress
-										</option>
-										<option value="plugins" <?php if ( $itao_options['itao_dropdown'] == 'Plugins' )
-											echo "selected='selected'" ?>>Plugins
-										</option>
-										<option value="admin" <?php if ( $itao_options['itao_dropdown'] == 'Admin' )
-											echo "selected='selected'" ?>>Admin
-										</option>
-									</select>
+											$tax_name  = esc_html( $taxonomy_obj->name );
+											$tax_label = esc_html( $taxonomy_obj->label );
+											echo "<li>";
+											echo '<input type="checkbox" name="itao_check" value="' . $tax_name . '"> ' . $tax_label . ' ( ' . $tax_name . ' )';
+											echo "</li>";
+										}
+										?>
+									</ul>
 								</td>
-							</tr>
-
-							</tr>
-
-							<tr>
-								<th><?php _e( "WP Plugin Admin Number", "insert-term-at-once" ) ?></th>
-								<td>
-									<input type="text" name="itao_num" size="2" value="<?php echo stripslashes( $itao_options['itao_num'] ); ?>"/>
-								</td>
-							</tr>
-							<tr>
-								<th><?php _e( "WP Plugin Admin Radio button", "insert-term-at-once" ) ?>*</th>
-								<td>
-									<label for="stats-enabled"><input type="radio" name="itao_radio" id="itao-enabled" value="1" <?php if ( $itao_options['itao_radio'] )
-											echo "checked='checked'" ?> /> Enabled</label>
-									<label for="stats-disabled"><input type="radio" name="itao_radio" id="itao-disabled" value="0" <?php if ( ! $itao_options['itao_radio'] )
-											echo "checked='checked'" ?> /> Disabled</label>
-								</td>
-							</tr>
-							<tr>
-								<th><?php _e( "WP Plugin Admin Textarea", "insert-term-at-once" ) ?></th>
-								<td>
-									<textarea name="itao_code" rows="3" cols="35"><?php echo stripslashes( $itao_options['itao_code'] ); ?></textarea></td>
 							</tr>
 							<tr>
 								<th><?php _e( "CSV File", "insert-term-at-once" ) ?></th>
@@ -122,5 +102,4 @@ $message = "";
 	</div>
 
 <?php
-
 
