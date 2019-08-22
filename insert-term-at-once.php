@@ -43,11 +43,15 @@ function insert_term_at_once( $terms, $taxonomies ) {
 
 	foreach ( $taxonomies as $tax ) {
 		foreach ( $terms as $term ) {
-			$term_array = array();
+			$term_array     = array();
+			$parent_term_id = '';
 			if ( ! $term[0] == null ) {
-				if ( ! $term[3] == null ) {
+				if ( ! empty( $term[3] ) ) {
 					$parent_term    = term_exists( $term[3], $tax ); // array is returned if taxonomy is given
 					$parent_term_id = $parent_term['term_id'];         // get numeric term id
+					if ( empty( $parent_term_id ) ) {
+						continue;
+					}
 				}
 				$term_array = array(
 					'slug'        => $term[1],
@@ -55,9 +59,7 @@ function insert_term_at_once( $terms, $taxonomies ) {
 					'parent'      => $parent_term_id,
 				);
 			}
-			if ( ! $term[3] && ! $parent_term_id == null ) {
-				wp_insert_term( $term[0], $tax, $term_array );
-			}
+			wp_insert_term( $term[0], $tax, $term_array );
 		}
 	}
 }
@@ -69,22 +71,6 @@ function insert_term_at_once( $terms, $taxonomies ) {
 /*
 /*********************************/
 
-function itao_init() {
-	$itao_options                  = array();
-	$itao_options['itao_radio']    = "TEXT";
-	$itao_options['itao_check']    = 1;
-	$itao_options['itao_dropdown'] = "WordPress";
-	$itao_options['itao_text']     = 10;
-	$itao_options['itao_code']     = "<p>add code</p>";
-
-	add_option( 'itao_options', $itao_options );
-}
-
-add_action( 'activate_insert-term-at-once/insert-term-at-once.php', 'itao_init' );
-
-function itao_get_options() {
-	return get_option( 'itao_options' );
-}
 
 function itao_config() {
 	include( 'itao-admin.php' );
