@@ -13,10 +13,8 @@ if ( isset( $_POST['submit'] ) ) {
 $message = "";
 ?>
 
-<?php if ( ! empty( $_POST['itao_csvfile'] ) ) : ?>
+<?php if ( ! empty( $_POST['itao_csv'] ) ) : ?>
 	<div id="message" class="updated fade"><p><strong><?php _e( 'Term updated.' ) ?></strong></p></div>
-<?php elseif ( ! empty( $_POST ) ) : ?>
-	<div id="message" class="updated fade"><p><strong><?php _e( 'Options saved.' ) ?></strong></p></div>
 <?php endif; ?>
 	<div class="wrap">
 	<h2><?php _e( 'Insert Term at Once Configuration', 'insert-term-at-once' ); ?></h2>
@@ -63,17 +61,14 @@ $message = "";
 								<th><?php _e( "Select taxonomy", "insert-term-at-once" ) ?></th>
 								<td>
 									<ul>
-										<li>
-											<input type="checkbox" name="itao_check" value="all_taxonomies"> <?php _e( "All taxonomies at once", "insert-term-at-once" ) ?>
-										</li>
 										<?php
 										foreach ( $taxonomies as $taxonomy_obj ) {
 
 											$tax_name  = esc_html( $taxonomy_obj->name );
 											$tax_label = esc_html( $taxonomy_obj->label );
-											echo "<li>";
-											echo '<input type="checkbox" name="itao_check" value="' . $tax_name . '"> ' . $tax_label . ' ( ' . $tax_name . ' )';
-											echo "</li>";
+											echo "<li><label>";
+											echo '<input type="checkbox" name="itao_check[]" value="' . $tax_name . '"> ' . $tax_label . ' ( ' . $tax_name . ' )';
+											echo "</label></li>";
 										}
 										?>
 									</ul>
@@ -82,7 +77,7 @@ $message = "";
 							<tr>
 								<th><?php _e( "CSV File", "insert-term-at-once" ) ?></th>
 								<td>
-									<input type="file" name="csv"/>
+									<input type="file" name="itao_csv"/>
 								</td>
 							</tr>
 
@@ -103,3 +98,37 @@ $message = "";
 
 <?php
 
+
+if ( ! empty( $_FILES['itao_csv'] ) ) {
+
+	if ( isset( $_POST['itao_check'] ) ) {
+		$taxonomies = $_POST['itao_check'];
+	}
+
+	if ( is_uploaded_file( $_FILES["itao_csv"]["tmp_name"] ) ) {
+		if ( move_uploaded_file( $_FILES["itao_csv"]["tmp_name"], $_FILES["itao_csv"]["name"] ) ) {
+			chmod( $_FILES["itao_csv"]["name"], 0644 );
+
+			setlocale( LC_ALL, 'ja_JP.UTF-8' );    //ロケール情報の設定
+			$data = file_get_contents( $_FILES["itao_csv"]["name"] );
+			$temp = tmpfile();    //テンポラリファイルの作成
+			$meta = stream_get_meta_data( $temp );    //メタデータからファイルパスを取得して読み込み
+			fwrite( $temp, $data );    //バイナリセーフなファイル書き込み処理
+			rewind( $temp );    //ファイルポインタの位置を先頭に戻す
+			$file = new SplFileObject( $meta['uri'] );    //fgetitao_csvよりSplFileObjectを使うほうが高速らしい。
+			$file->setFlags( SplFileObject::READ_CSV );
+			$terms = array();
+			foreach ( $file as $line ) {
+				$terms[] = $line;
+			}
+			fclose( $temp );
+			$file = null;
+
+
+		} else {
+			_e( "Doesn't upload", "insert-term-at-once" );
+		}
+
+		insert_term_at_once( $terms, $taxonomies );
+	}
+}

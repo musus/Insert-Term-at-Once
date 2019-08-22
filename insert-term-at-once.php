@@ -39,54 +39,26 @@ add_action( 'wp_enqueue_scripts', "itao_add_stylesheet", 9999 );
 /*
 /*********************************/
 
-function insert_term_at_once( $terms ) {
-//	$parent_term = term_exists( 'bar', 'category' ); // array is returned if taxonomy is given
-//	$parent_term_id = $parent_term['term_id'];         // get numeric term id
+function insert_term_at_once( $terms, $taxonomies ) {
+	//	$parent_term = term_exists( 'bar', 'category' ); // array is returned if taxonomy is given
+	//	$parent_term_id = $parent_term['term_id'];         // get numeric term id
 
-
-	foreach ( $terms as $term ) {
-		$term_array = array();
-		if ( ! $term[0] == null ) {
-			if ( ! $term[1] == null ) {
-				array_splice( $term_array, 1, 0, $term[1] );
+	foreach ( $taxonomies as $tax ) {
+		foreach ( $terms as $term ) {
+			$term_array = array();
+			if ( ! $term[0] == null ) {
+				$term_array = array(
+					'slug'        => $term[1],
+					'description' => $term[2],
+					//'parent'      => $parent_term_id,
+				);
 			}
-			if ( $term[2] ) {
-				array_splice( $term_array, 2, 0, $term[2] );
-			}
-		}
 
 
-		wp_insert_term( $term[0], 'category', $term_array );
-	}
-}
-
-if ( ! empty( $_FILES['csv'] ) ) {
-	if ( is_uploaded_file( $_FILES["csv"]["tmp_name"] ) ) {
-		if ( move_uploaded_file( $_FILES["csv"]["tmp_name"], $_FILES["csv"]["name"] ) ) {
-			chmod( $_FILES["csv"]["name"], 0644 );
-
-			setlocale( LC_ALL, 'ja_JP.UTF-8' );    //ロケール情報の設定
-			$data = file_get_contents( $_FILES["csv"]["name"] );
-			$temp = tmpfile();    //テンポラリファイルの作成
-			$meta = stream_get_meta_data( $temp );    //メタデータからファイルパスを取得して読み込み
-			fwrite( $temp, $data );    //バイナリセーフなファイル書き込み処理
-			rewind( $temp );    //ファイルポインタの位置を先頭に戻す
-			$file = new SplFileObject( $meta['uri'] );    //fgetcsvよりSplFileObjectを使うほうが高速らしい。
-			$file->setFlags( SplFileObject::READ_CSV );
-			$terms = array();
-			foreach ( $file as $line ) {
-				$terms[] = $line;
-			}
-			fclose( $temp );
-			$file = null;
-
-
-		} else {
-			echo "ファイルをアップロードできません。";
+			wp_insert_term( $term[0], $tax, $term_array );
 		}
 	}
-	var_dump( $terms );
-	insert_term_at_once( $terms );
+
 }
 
 
