@@ -43,7 +43,7 @@ function insert_term_at_once( $terms, $taxonomies ) {
 
 	foreach ( $taxonomies as $tax ) {
 		foreach ( $terms as $term ) {
-			$term_check = term_exists( $term[0], $tax );
+			$term_check = term_exists( $term[1], $tax );
 			if ( $term_check ) {
 				$term_id        = $term_check['term_id'];
 				$term_array     = array();
@@ -87,6 +87,18 @@ function insert_term_at_once( $terms, $taxonomies ) {
 		}
 	}
 }
+
+function delete_terms_at_once( $delete_tax ) {
+	if ( is_admin() ) {
+		foreach ( $delete_tax as $tax ) {
+			$terms = get_terms( $tax, array( 'fields' => 'ids', 'hide_empty' => false ) );
+			foreach ( $terms as $value ) {
+				wp_delete_term( $value, $tax );
+			}
+		}
+	}
+}
+
 
 /*********************************/
 /*

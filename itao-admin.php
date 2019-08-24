@@ -1,5 +1,28 @@
 <?php
-if ( isset( $_POST['insert_term_at_once_submit'] ) && ! empty( $_FILES['itao_csv'] ) ) {
+if ( isset( $_POST['insert_term_at_once_submit'] ) && isset( $_POST['itao_delete'] ) ) {
+	if ( $_POST['itao_delete'] == '1' ) {
+		delete_terms_at_once( $_POST['itao_check'] );
+		?>
+		<div id="message" class="updated fade">
+			<p>
+				<strong>
+					<?php
+					_e( 'All terms deleted as ', "insert-term-at-once" );
+					foreach ( $_POST['itao_check'] as $term ) {
+						echo $term . ' ';
+						if ( $term !== end( $_POST['itao_check'] ) ) {
+							echo ", ";
+						}
+					}
+					_e( '.', "insert-term-at-once" ); ?>
+				</strong>
+			</p>
+		</div>
+		<?php
+
+	}
+} elseif ( isset( $_POST['insert_term_at_once_submit'] ) && ! empty( $_FILES['itao_csv'] ) ) {
+
 	$itao_csv = $_FILES['itao_csv'];
 
 	if ( ! $itao_csv['name'] == null && isset( $_POST['itao_check'] ) ) {
@@ -125,6 +148,14 @@ $message = ""; ?>
 										}
 										?>
 									</ul>
+								</td>
+							</tr>
+							<tr>
+								<th><?php _e( "All delete term", "insert-term-at-once" ) ?></th>
+								<td>
+									<label>
+										<input type="checkbox" name="itao_delete" value="1"> <?php _e( "All delete terms", "insert-term-at-once" ) ?>
+									</label>
 								</td>
 							</tr>
 							<tr>
