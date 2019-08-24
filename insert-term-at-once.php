@@ -43,27 +43,50 @@ function insert_term_at_once( $terms, $taxonomies ) {
 
 	foreach ( $taxonomies as $tax ) {
 		foreach ( $terms as $term ) {
-			$term_array     = array();
-			$parent_term_id = '';
-			if ( ! $term[0] == null ) {
-				if ( ! empty( $term[3] ) ) {
-					$parent_term    = term_exists( $term[3], $tax ); // array is returned if taxonomy is given
-					$parent_term_id = $parent_term['term_id'];         // get numeric term id
-					if ( empty( $parent_term_id ) ) {
-						continue;
+			$term_check = term_exists( $term[0], $tax );
+			if ( $term_check ) {
+				$term_id        = $term_check['term_id'];
+				$term_array     = array();
+				$parent_term_id = '';
+				if ( ! $term[0] == null ) {
+					if ( ! empty( $term[3] ) ) {
+						$parent_term    = term_exists( $term[3], $tax );
+						$parent_term_id = $parent_term['term_id'];
+						if ( empty( $parent_term_id ) ) {
+							continue;
+						}
 					}
+					$term_array = array(
+						'slug'        => $term[1],
+						'description' => $term[2],
+						'parent'      => $parent_term_id,
+					);
 				}
-				$term_array = array(
-					'slug'        => $term[1],
-					'description' => $term[2],
-					'parent'      => $parent_term_id,
-				);
+				wp_update_term( $term_id, $tax, $term_array );
+
+
+			} else {
+				$term_array     = array();
+				$parent_term_id = '';
+				if ( ! $term[0] == null ) {
+					if ( ! empty( $term[3] ) ) {
+						$parent_term    = term_exists( $term[3], $tax );
+						$parent_term_id = $parent_term['term_id'];
+						if ( empty( $parent_term_id ) ) {
+							continue;
+						}
+					}
+					$term_array = array(
+						'slug'        => $term[1],
+						'description' => $term[2],
+						'parent'      => $parent_term_id,
+					);
+				}
+				wp_insert_term( $term[0], $tax, $term_array );
 			}
-			wp_insert_term( $term[0], $tax, $term_array );
 		}
 	}
 }
-
 
 /*********************************/
 /*
